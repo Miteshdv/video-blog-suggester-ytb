@@ -49,12 +49,9 @@ export default function Home() {
                 {session.user.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <div>
-              <p className="text-lg font-semibold text-black dark:text-zinc-50">
-                {session.user.name}
-              </p>
-              <p className="text-sm text-zinc-500">{session.user.email}</p>
-            </div>
+            <p className="text-lg font-semibold text-black dark:text-zinc-50">
+              {session.user.name}
+            </p>
             <button
               onClick={handleSignOut}
               disabled={busy}
