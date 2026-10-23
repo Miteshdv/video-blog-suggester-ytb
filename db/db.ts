@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/neon-http';
 import { env as serverEnv } from '../data/serverEnv';
 import { relations } from './relations';
+import { authRelations } from './schemas/better-auth';
  
-const db = drizzle(serverEnv.DATABASE_URL,{relations});
+export const db = drizzle(serverEnv.DATABASE_URL, { relations: { ...relations, ...authRelations } });
 
