@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/db";
 import { content, contentChunk } from "@/db/schemas";
 import { getArticleMetadata } from "@/lib/ingestion/article-content";
+import { batchExec } from "./utils/batch-exec";
 
 const RSS_URL = "https://blog.webdevsimplified.com/rss.xml";
 const BLOG_HOST = "blog.webdevsimplified.com";
@@ -79,34 +80,20 @@ export async function ingestArticles() {
   "use workflow";
 
   const missingArticles = await getMissingArticles();
-  const failures: { url: string; reason: string }[] = [];
-  let ingested = 0;
-  let skipped = 0;
+  const { succeeded, failures } = await batchExec(
+    missingArticles,
+    ingestArticle,
+    { batchSize: BATCH_SIZE },
+  );
 
-  for (let offset = 0; offset < missingArticles.length; offset += BATCH_SIZE) {
-    const batch = missingArticles.slice(offset, offset + BATCH_SIZE);
-    const results = await Promise.allSettled(
-      batch.map((item) => ingestArticle(item)),
-    );
+  const ingested = succeeded.filter((result) => result === "ingested").length;
 
-    results.forEach((result, index) => {
-      if (result.status === "fulfilled") {
-        if (result.value === "ingested") ingested += 1;
-        else skipped += 1;
-        return;
-      }
-
-      failures.push({
-        url: batch[index].url,
-        reason:
-          result.reason instanceof Error
-            ? result.reason.message
-            : String(result.reason),
-      });
-    });
-  }
-
-  return { ingested, skipped, failed: failures.length, failures };
+  return {
+    ingested,
+    skipped: succeeded.length - ingested,
+    failed: failures.length,
+    failures: failures.map(({ item, reason }) => ({ url: item.url, reason })),
+  };
 }
 
 async function getMissingArticles(): Promise<ArticleToIngest[]> {
