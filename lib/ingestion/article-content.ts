@@ -65,7 +65,9 @@ export function splitArticleIntoChunks(html: string): string[] {
 
   const walk = (node: HtmlNode): void => {
     if (node.type === "text") {
-      currentText += `${node.data ?? ""} `;
+      // Keep text verbatim: inline markup must not introduce spaces
+      // (`set<em>State</em>` stays `setState`). Block elements add separators.
+      currentText += node.data ?? "";
       return;
     }
 

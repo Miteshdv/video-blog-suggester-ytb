@@ -41,6 +41,7 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
     const { embeddings: batchEmbeddings } = await embedMany({
       model,
       values: batch,
+      dimensions: expectedDimensions,
       abortSignal: AbortSignal.timeout(60_000),
     });
 

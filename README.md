@@ -40,6 +40,8 @@ article's Open Graph image and plain-text chunks split at H2 headings. Text
 before the first H2 is kept as its own chunk. Chunk embeddings are generated
 with OpenAI (`OPENAI_API_KEY`, `OPENAI_EMBEDDING_MODEL`) as each article is
 ingested; run `/api/backfill/embeddings` to embed pre-existing chunks.
+Embeddings are always requested at 1536 dimensions to match the database
+column, so either supported model can be selected without a migration.
 
 ## Deploy on Vercel
 

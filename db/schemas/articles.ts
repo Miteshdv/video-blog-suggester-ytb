@@ -11,8 +11,9 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-// Must match the configured embedding model: text-embedding-3-small = 1536,
-// text-embedding-3-large = 3072. Switching models requires a migration.
+// Embeddings are requested from OpenAI at exactly this many dimensions, so any
+// supported model can be used without a migration. Changing this value does
+// require a migration.
 export const EMBEDDING_DIMENSION = 1536;
 
 const vector = customType<{ data: number[]; driverData: string }>({
