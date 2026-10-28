@@ -15,15 +15,20 @@
     "auth:generate": "auth generate --output ./db/schemas/better-auth.ts --config ./lib/auth/config.ts --yes"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.104",
     "@neondatabase/serverless": "^1.2.0",
     "@t3-oss/env-core": "^0.13.11",
     "@t3-oss/env-nextjs": "^0.13.11",
+    "ai": "^7.0.155",
     "better-auth": "^1.7.0-rc.6",
+    "cheerio": "^1.2.0",
     "dotenv": "^18.0.8",
     "drizzle-orm": "^1.0.0-rc.4",
+    "fast-xml-parser": "^5.11.2",
     "next": "16.4.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "workflow": "^5.2.3"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

@@ -29,6 +29,20 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Article ingestion
+
+Apply the database migrations, then set `ARTICLE_INGEST_SECRET` in the deployment
+environment. Start an ingestion run with an authenticated `POST` request to
+`/api/ingest/articles`, using `Authorization: Bearer <ARTICLE_INGEST_SECRET>`.
+The workflow reads the Web Dev Simplified RSS feed, skips URLs already stored,
+and fetches the remaining article pages in batches of at most 10. It saves each
+article's Open Graph image and plain-text chunks split at H2 headings. Text
+before the first H2 is kept as its own chunk. Chunk embeddings are generated
+with OpenAI (`OPENAI_API_KEY`, `OPENAI_EMBEDDING_MODEL`) as each article is
+ingested; run `/api/backfill/embeddings` to embed pre-existing chunks.
+Embeddings are always requested at 1536 dimensions to match the database
+column, so either supported model can be selected without a migration.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

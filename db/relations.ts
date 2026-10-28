@@ -12,4 +12,16 @@ export const relations = defineRelations(schema, (r) => ({
   account: {
     user: r.one.user({ from: r.account.userId, to: r.user.id }),
   },
+  content: {
+    chunks: r.many.contentChunk({
+      from: r.content.id,
+      to: r.contentChunk.contentId,
+    }),
+  },
+  contentChunk: {
+    content: r.one.content({
+      from: r.contentChunk.contentId,
+      to: r.content.id,
+    }),
+  },
 }));
