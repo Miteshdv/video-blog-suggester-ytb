@@ -10,7 +10,20 @@ import {
 // single failure costs little work.
 const MAX_INPUTS_PER_REQUEST = 100;
 
-const openai = createOpenAI({ apiKey: serverEnv.OPENAI_API_KEY });
+let openai: ReturnType<typeof createOpenAI> | undefined;
+
+// Created lazily so importing this module (e.g. during `next build` page data
+// collection) does not require OPENAI_API_KEY to be present.
+function getOpenAIClient() {
+  if (!openai) {
+    const apiKey = serverEnv.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY is required to generate embeddings");
+    }
+    openai = createOpenAI({ apiKey });
+  }
+  return openai;
+}
 
 /**
  * Embeds texts with OpenAI. Input order is preserved: result[i] is the
@@ -20,7 +33,7 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
 
   const expectedDimensions = getEmbeddingDimensions();
-  const model = openai.embeddingModel(getEmbeddingModel());
+  const model = getOpenAIClient().embeddingModel(getEmbeddingModel());
   const embeddings: number[][] = [];
 
   for (let offset = 0; offset < texts.length; offset += MAX_INPUTS_PER_REQUEST) {
