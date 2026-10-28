@@ -11,8 +11,12 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+// Must match the configured embedding model: text-embedding-3-small = 1536,
+// text-embedding-3-large = 3072. Switching models requires a migration.
+export const EMBEDDING_DIMENSION = 1536;
+
 const vector = customType<{ data: number[]; driverData: string }>({
-  dataType: () => "vector",
+  dataType: () => `vector(${EMBEDDING_DIMENSION})`,
   toDriver: (value) => JSON.stringify(value),
   fromDriver: (value) => {
     const parsed: unknown = JSON.parse(value);
@@ -67,5 +71,9 @@ export const contentChunk = pgTable(
       table.startPosition,
     ),
     index("content_chunk_contentId_idx").on(table.contentId),
+    index("content_chunk_embedding_hnsw").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops"),
+    ),
   ],
 );

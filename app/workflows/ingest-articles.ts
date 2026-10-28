@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/db";
 import { content, contentChunk } from "@/db/schemas";
 import { getArticleMetadata } from "@/lib/ingestion/article-content";
+import { embedTexts } from "@/lib/embedding/embed-texts";
 import { batchExec } from "./utils/batch-exec";
 
 const RSS_URL = "https://blog.webdevsimplified.com/rss.xml";
@@ -157,6 +158,7 @@ async function ingestArticle(
   if (alreadyStored.length > 0) return "skipped";
 
   const contentId = randomUUID();
+  const embeddings = await embedTexts(chunks.map((chunk) => chunk.text));
 
   // neon-http has no interactive transactions, but batch() runs atomically.
   await db.batch([
@@ -171,10 +173,11 @@ async function ingestArticle(
       content: articleContent,
     }),
     db.insert(contentChunk).values(
-      chunks.map((chunk) => ({
+      chunks.map((chunk, index) => ({
         contentId,
         startPosition: chunk.startPosition,
         text: chunk.text,
+        embedding: embeddings[index],
       })),
     ),
   ]);

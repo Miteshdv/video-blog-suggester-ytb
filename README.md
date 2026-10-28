@@ -37,7 +37,9 @@ environment. Start an ingestion run with an authenticated `POST` request to
 The workflow reads the Web Dev Simplified RSS feed, skips URLs already stored,
 and fetches the remaining article pages in batches of at most 10. It saves each
 article's Open Graph image and plain-text chunks split at H2 headings. Text
-before the first H2 is kept as its own chunk. Embeddings are not generated.
+before the first H2 is kept as its own chunk. Chunk embeddings are generated
+with OpenAI (`OPENAI_API_KEY`, `OPENAI_EMBEDDING_MODEL`) as each article is
+ingested; run `/api/backfill/embeddings` to embed pre-existing chunks.
 
 ## Deploy on Vercel
 

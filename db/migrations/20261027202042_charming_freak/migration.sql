@@ -1,0 +1,2 @@
+ALTER TABLE "content_chunk" ALTER COLUMN "embedding" SET DATA TYPE vector(1536) USING "embedding"::vector(1536);--> statement-breakpoint
+CREATE INDEX "content_chunk_embedding_hnsw" ON "content_chunk" USING hnsw ("embedding" vector_cosine_ops);
