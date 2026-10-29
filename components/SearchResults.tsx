@@ -73,13 +73,70 @@ function getUrlAtChunkLocation(result: SearchResult): string {
     return `${result.url}&t=${Math.floor(result.startPosition / 1000)}`;
   }
 
-  const lines = result.rawText.split("\n").filter((line) => line.trim());
-  const first = lines[0] ?? result.rawText;
-  const last = lines.at(-1) ?? first;
-  const fragment =
-    first === last
-      ? encodeURIComponent(first)
-      : `${encodeURIComponent(first)},${encodeURIComponent(last)}`;
+  const fragment = buildTextFragment(result.rawText);
+  return fragment ? `${result.url}#:~:text=${fragment}` : result.url;
+}
 
-  return `${result.url}#:~:text=${fragment}`;
+const MAX_FRAGMENT_WORDS = 10;
+const MIN_FRAGMENT_WORDS = 3;
+const CODE_CHARS = /[{}()[\];=<>/\\|`$*#@~^]/;
+const CODE_IDENTIFIER = /^[a-z][A-Za-z0-9]*\.[a-z][A-Za-z0-9]*$/;
+
+/**
+ * Builds a `text=` fragment that stays inside a single text block.
+ *
+ * Chunks are whitespace-normalized sections (heading + paragraphs), so we
+ * cannot rely on newlines to find block boundaries. Text fragments cannot
+ * match across HTML blocks, and a start/end pair spanning the whole chunk
+ * would do exactly that. Instead we take a short *contiguous* phrase from one
+ * prose sentence, which is far more likely to sit inside a single block.
+ *
+ * Returns null when no safe phrase can be found; callers then fall back to the
+ * plain article URL rather than emitting a fragment that cannot match.
+ */
+function buildTextFragment(rawText: string): string | null {
+  const text = rawText.replace(/\s+/g, " ").trim();
+  if (!text) return null;
+
+  const sentences = text
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => normalizePunctuation(sentence.trim()))
+    .filter((sentence) => sentence.split(" ").length >= MIN_FRAGMENT_WORDS)
+    .filter((sentence) => /^[A-Z]/.test(sentence))
+    // Code snippets and CSS rules make poor fragments: their rendered text
+    // often differs from the extracted text, so the fragment never matches.
+    .filter((sentence) => !CODE_CHARS.test(sentence))
+    .filter((sentence) => !sentence.split(" ").some((w) => CODE_IDENTIFIER.test(w)))
+    .filter((sentence) => numericWordRatio(sentence) <= 0.2)
+    // A chunk starts with its section heading, which is a separate block in
+    // the rendered page, so a fragment beginning there can never match.
+    .filter((sentence) => !looksLikeHeadingMerge(sentence));
+
+  const candidates = (sentences.length > 1 ? sentences.slice(1) : sentences)
+    .sort((a, b) => b.length - a.length);
+
+  const sentence = candidates[0];
+  if (!sentence) return null;
+
+  return encodeURIComponent(
+    sentence.split(" ").slice(0, MAX_FRAGMENT_WORDS).join(" "),
+  );
+}
+
+/** Inline markup leaves stray spaces before punctuation (`initial ,`). */
+function normalizePunctuation(sentence: string): string {
+  return sentence.replace(/\s+([,.;:!?])/g, "$1");
+}
+
+/** Detects `Heading Next sentence starts here` merges. */
+function looksLikeHeadingMerge(sentence: string): boolean {
+  const words = sentence.split(" ");
+  if (words.length < 2) return true;
+  const second = words[1];
+  return /^[A-Z]/.test(second) && second !== "I";
+}
+
+function numericWordRatio(sentence: string): number {
+  const words = sentence.split(" ");
+  return words.filter((word) => /^\d+$/.test(word)).length / words.length;
 }

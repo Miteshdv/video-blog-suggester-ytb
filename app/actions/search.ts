@@ -6,7 +6,7 @@ import { db } from "@/db/db";
 import { content, contentChunk, userSearches } from "@/db/schemas";
 import { auth } from "@/lib/auth/config";
 import { embedText } from "@/lib/embedding/embed-texts";
-import { checkRateLimit, RateLimitError } from "@/lib/rate-limit";
+import { reserveSearchQuota, RateLimitError } from "@/lib/rate-limit";
 
 const MIN_SIMILARITY = 0.5;
 const MAX_RESULTS = 20;
@@ -33,7 +33,7 @@ export async function searchContent(query: string): Promise<SearchResponse> {
   if (!trimmedQuery) return { results: [] };
 
   try {
-    await checkRateLimit(session.user.id);
+    await reserveSearchQuota(session.user.id);
   } catch (error) {
     if (error instanceof RateLimitError) return { error: error.message };
     throw error;
