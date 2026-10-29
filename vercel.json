@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/workflows/ingest-articles", "schedule": "0 0 * * 2" },
+    { "path": "/api/backfill/embeddings", "schedule": "30 0 * * 2" }
+  ]
+}

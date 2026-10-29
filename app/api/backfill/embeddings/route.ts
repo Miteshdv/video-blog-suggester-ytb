@@ -1,6 +1,16 @@
+import type { NextRequest } from "next/server";
 import { start } from "workflow/api";
 import { NextResponse } from "next/server";
 import { backfillEmbeddings } from "@/app/workflows/backfill-embeddings";
+import { verifyAndRunCron } from "@/app/workflows/utils/verify-and-run-cron";
+
+/**
+ * Vercel Cron only sends GET requests, so the scheduled trigger lives here.
+ * Manual/programmatic triggers can still use POST with ARTICLE_INGEST_SECRET.
+ */
+export async function GET(request: NextRequest) {
+  return verifyAndRunCron(request, backfillEmbeddings);
+}
 
 export async function POST(request: Request) {
   const secret = process.env.ARTICLE_INGEST_SECRET;

@@ -1,5 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { embedMany } from "ai";
+import { embed, embedMany } from "ai";
 import { env as serverEnv } from "@/data/serverEnv";
 import {
   getEmbeddingDimensions,
@@ -23,6 +23,29 @@ function getOpenAIClient() {
     openai = createOpenAI({ apiKey });
   }
   return openai;
+}
+
+/**
+ * Embeds a single text (e.g. a search query) with the same model and
+ * dimensions used for ingestion, so vectors are directly comparable.
+ */
+export async function embedText(text: string): Promise<number[]> {
+  const expectedDimensions = getEmbeddingDimensions();
+  const model = getOpenAIClient().embeddingModel(getEmbeddingModel());
+  const { embedding } = await embed({
+    model,
+    value: text,
+    dimensions: expectedDimensions,
+    abortSignal: AbortSignal.timeout(30_000),
+  });
+
+  if (embedding.length !== expectedDimensions) {
+    throw new Error(
+      `OpenAI returned an embedding with ${embedding.length} dimensions, expected ${expectedDimensions}`,
+    );
+  }
+
+  return embedding;
 }
 
 /**

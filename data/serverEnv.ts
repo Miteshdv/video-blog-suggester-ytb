@@ -9,6 +9,9 @@ export const env = createEnv({
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.string().url(),
    
+    CRON_SECRET: z.string().min(1).optional(),
+    RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(20),
+    RATE_LIMIT_WINDOW_HOURS: z.coerce.number().int().positive().default(1),
     OPENAI_API_KEY: z.string().min(1).optional(),
     OPENAI_EMBEDDING_MODEL: z
       .enum(["text-embedding-3-small", "text-embedding-3-large"])

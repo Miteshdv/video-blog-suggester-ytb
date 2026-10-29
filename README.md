@@ -43,6 +43,21 @@ ingested; run `/api/backfill/embeddings` to embed pre-existing chunks.
 Embeddings are always requested at 1536 dimensions to match the database
 column, so either supported model can be selected without a migration.
 
+### Scheduled ingestion
+
+`vercel.json` registers a Vercel Cron job that calls
+`GET /api/workflows/ingest-articles` every Tuesday at 00:00 UTC. Vercel sends
+`Authorization: Bearer $CRON_SECRET` automatically, so set `CRON_SECRET` in the
+project environment (Production and Preview) and redeploy. The route returns
+`202` with a `runId`; track the run under Observability → Workflows.
+
+To trigger it manually:
+
+```bash
+curl -X GET "https://<your-domain>/api/workflows/ingest-articles" \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
