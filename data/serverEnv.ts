@@ -16,6 +16,9 @@ export const env = createEnv({
     OPENAI_EMBEDDING_MODEL: z
       .enum(["text-embedding-3-small", "text-embedding-3-large"])
       .default("text-embedding-3-small"),
+    GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+    GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+    GOOGLE_REFRESH_TOKEN: z.string().min(1).optional(),
   },
 
   experimental__runtimeEnv: process.env,
